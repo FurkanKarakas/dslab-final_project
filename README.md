@@ -322,3 +322,27 @@ However, this is not recommended, or it should come with a warning.
 Imagine from a user experience perspective, how would you react if you are being proposed a plan in which a transfer is scheduled to depart before you arrive?
 Furthermore, who would you blame if the plan fails: the planner that came up with a theoretically infeasible plan, or the operator who respected their schedule?
 
+##### 4 - Q: How are the inputs of the solution entered
+* **A**: You will enter a starting and terminating stations numerical ID (bus, trams, trains), a maximum time of arrival, and
+a minimum confidence level. You do not need to enter a day. The route is for a typical business day of the week, not a week-end, or bank holiday.
+That is you can filter out all services that are not on normal business days from your options.
+The output must be the service that allows you to leave at the latest, while arriving before the specified time at your destination,
+and with a probability of success equal or higher than the specified certainty level.
+
+##### 5 - Q: Do we need to visualize the output on a map
+* **A**: You do not need to, a list in textual form will be sufficient. Note that the list must display at a minimum the list of
+stops with their sheduled time of arrival (except first stop), and departures (except last stops). This is the indispensable
+information. We let you decide what other information you think is useful to judge of the quality of the solution and
+to validate the results - since the availability of this information will depend on which method you use to solve this problem
+we cannot be more specific.
+
+##### 6 - Q: How do we validate the solution
+* **A**: We can give a hint: we will pick two stations and a maximum time of arrival, which has different routes with known
+probability of success computed as follow: `number of success/(number of success + number of failure)` over a given time period
+(business days only) and we will compare your results with ours. Where a `sucess` means that on that day and time would would
+have been able to catch all the connections and arrive before the specified time limit (if we arrive after it's a miss)
+and a `failure` is when we missed at least one connection.
+
+         
+
+
