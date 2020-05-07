@@ -330,18 +330,17 @@ The output must be the service that allows you to leave at the latest, while arr
 and with a probability of success equal or higher than the specified certainty level.
 
 ##### 5 - Q: Do we need to visualize the output on a map
-* **A**: You do not need to, a list in textual form will be sufficient. Note that the list must display at a minimum the list of
+* **A**: You do not need to visualize the results. A list in textual form will be sufficient. Note that the list must display at a minimum the list of
 stops with their sheduled time of arrival (except first stop), and departures (except last stops). This is the indispensable
 information. We let you decide what other information you think is useful to judge of the quality of the solution and
-to validate the results - since the availability of this information will depend on which method you use to solve this problem
-we cannot be more specific.
+to validate your results.
 
 ##### 6 - Q: How do we validate the solution
 * **A**: We can give a hint: we will pick two stations and a maximum time of arrival, which has different routes with known
-probability of success computed as follow: `number of success/(number of success + number of failure)` over a given time period
-(business days only) and we will compare your results with ours. Where a `sucess` means that on that day and time would would
-have been able to catch all the connections and arrive before the specified time limit (if we arrive after it's a miss)
-and a `failure` is when we missed at least one connection.
+probability of success.  It is a `sucess` if on a given day and time we are
+able to catch all the connections and arrive before the specified time limit, otherwise it is a `failure`. We compute the probability
+as `number of successes/(number of successes + number of failures)` by repeating this over a given time period of many days
+(business days only), and we compare your results, i.e. routes and minimum success guarantee with ours.
 
          
 
