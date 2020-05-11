@@ -197,6 +197,23 @@ We provide a summary description of the files below. The most relevant files are
     - `STOP_LON`: stop longitude
     - `LOCATION_TYPE`:
     - `PARENT_STATION`: if the stop is one of many collocated at a same location, such as platforms at a train station
+    
+    The data (3rd week May 2019) is available in ORC format under `/data/sbb/timetables/orc/stops/` - as follows:
+    
+    ```
+    create external table <database>.sbb_stops_orc(
+        STOP_ID        string,
+        STOP_NAME      string,
+        STOP_LAT       double,
+        STOP_LON       double,
+        LOCATION_TYPE  string,
+        PARENT_STATION string
+    )
+    row format delimited fields terminated by ';'
+    stored as orc
+    location '/data/sbb/timetables/orc/stops'
+    tblproperties ('orc.compress'='SNAPPY','immutable'='true');
+    ```
 
 * stop_times.txt(+):
 
@@ -207,6 +224,24 @@ We provide a summary description of the files below. The most relevant files are
     - `STOP_SEQUENCE`: sequence number of the stop on this trip id, starting at 1.
     - `PICKUP_TYPE`:
     - `DROP_OFF_TYPE`:
+    
+    This data is available in ORC format under `/data/sbb/timetables/orc/stop_times/` - as follows:
+    
+    ```
+    create external table <database>.sbb_stop_times_orc(
+        TRIP_ID        string,
+        ARRIVAL_TIME   string,
+        DEPARTURE_TIME string,
+        STOP_ID        string,
+        STOP_SEQUENCE  smallint,
+        PICKUP_TYPE    tinyint,
+        DROP_OFF_TYPE  tinyint
+    )
+    row format delimited fields terminated by ';'
+    stored as orc
+    location '/data/sbb/timetables/orc/stop_times'
+    tblproperties ('orc.compress'='SNAPPY','immutable'='true');
+    ```
 
 * trips.txt:
 
@@ -217,12 +252,48 @@ We provide a summary description of the files below. The most relevant files are
     - `TRIP_SHORT_NAME`: internal identifier for the trip_headsign (note TRIP_HEADSIGN and TRIP_SHORT_NAME are only unique for an agency)
     - `DIRECTION_ID`: if the route is bidirectional, this field indicates the direction of the trip on the route.
     
+    This data is available in ORC format under `/data/sbb/timetables/orc/trips` - as follows:
+    
+    ```
+    create external table <database>.sbb_trips_orc(
+        ROUTE_ID        string,
+        SERVICE_ID      string,
+        TRIP_ID         string,
+        TRIP_HEADSIGN   string,
+        TRIP_SHORT_NAME string,
+        DIRECTION_ID    tinyint
+    )
+    row format delimited fields terminated by ';'
+    stored as orc
+    location '/data/sbb/timetables/orc/trips'
+    tblproperties ('orc.compress'='SNAPPY','immutable'='true');
+    ```
+    
 * calendar.txt:
 
     - `SERVICE_ID`: identifier (PK) of a group of trips sharing a same calendar and calendar exception pattern.
     - `MONDAY`..`SUNDAY`: 0 or 1 for each day of the week, indicating occurence of the service on that day.
     - `START_DATE`: start date when weekly service id pattern is valid
     - `END_DATE`: end date after which weekly service id pattern is no longer valid
+    
+    This data is available in ORC format under `/data/sbb/timetables/orc/calendar` - as follows (note we omitted start-end dates):
+    
+    ```
+    create external table <database>.sbb_calendar_orc(
+        SERVICE_ID string,
+        MONDAY     boolean,
+        TUESDAY    boolean,
+        WEDNESDAY  boolean,
+        THURSDAY   boolean,
+        FRIDAY     boolean,
+        SATURDAY   boolean,
+        SUNDAY     boolean
+    )
+    row format delimited fields terminated by ';'
+    stored as orc
+    location '/data/sbb/timetables/orc/calendar'
+    tblproperties ('orc.compress'='SNAPPY','immutable'='true');
+    ```
     
 * routes.txt:
 
@@ -232,6 +303,23 @@ We provide a summary description of the files below. The most relevant files are
     - `ROUTE_LONG_NAME`: (empty)
     - `ROUTE_DESC`: _Bus_, _Zub_, _Tram_, etc.
     - `ROUTE_TYPE`:
+    
+    This data is available in ORC format under `/data/sbb/timetables/orc/routes` - as follows:
+    
+    ```
+    create external table <database>.sbb_routes_orc(
+        ROUTE_ID         string,
+        AGENCY_ID        string,
+        ROUTE_SHORT_NAME string,
+        ROUTE_LONG_NAME  string,
+        ROUTE_DESC       string,
+        ROUTE_TYPE       smallint
+    )
+    row format delimited fields terminated by ';'
+    stored as orc
+    location '/data/sbb/timetables/orc/routes'
+    tblproperties ('orc.compress'='SNAPPY','immutable'='true');
+    ```
     
 Notes: PK=Primary Key (unique), FK=Foreign Key (refers to a Primary Key in another table)
 
@@ -323,17 +411,16 @@ Imagine from a user experience perspective, how would you react if you are being
 Furthermore, who would you blame if the plan fails: the planner that came up with a theoretically infeasible plan, or the operator who respected their schedule?
 
 ##### 4 - Q: How are the inputs of the solution entered
-* **A**: You will enter a starting and terminating stations numerical ID (bus, trams, trains), a maximum time of arrival, and
+* **A**: You will enter the numerial IDs of the starting and terminating station (bus, trams, trains, ...), a desired time of arrival, and
 a minimum confidence level. You do not need to enter a day. The route is for a typical business day of the week, not a week-end, or bank holiday.
 That is you can filter out all services that are not on normal business days from your options.
 The output must be the service that allows you to leave at the latest, while arriving before the specified time at your destination,
 and with a probability of success equal or higher than the specified certainty level.
 
 ##### 5 - Q: Do we need to visualize the output on a map
-* **A**: You do not need to visualize the results. A list in textual form will be sufficient. Note that the list must display at a minimum the list of
-stops with their sheduled time of arrival (except first stop), and departures (except last stops). This is the indispensable
-information. We let you decide what other information you think is useful to judge of the quality of the solution and
-to validate your results.
+* **A**: You do not need to visualize the results. A list in textual form will be sufficient. Note that the list must display at a minimum
+the starting time, the routes, arrival time, and confidence level.
+If it involves transfers, the list must also include the arrival & departure times, and intermediate routes at the transfer points.
 
 ##### 6 - Q: How do we validate the solution
 * **A**: We can give a hint: we will pick two stations and a maximum time of arrival, which has different routes with known
@@ -342,6 +429,12 @@ able to catch all the connections and arrive before the specified time limit, ot
 as `number of successes/(number of successes + number of failures)` by repeating this over a given time period of many days
 (business days only), and we compare your results, i.e. routes and minimum success guarantee with ours.
 
-         
+##### 7 - Q: If a stop in the 15km radius is connected only through a bus or train that stops outside the 15km radius, should this stop be considered?
+* **A**: No, this stop should be considered, because the bus or train goes through stops that are outside the 15km radius.
+
+##### 8 - Q: Can we use any libraries for the project?
+* **A**: You are free to use any libraries you want for the project. The only constraint is that you must configure your Docker image
+so that we don't have to configure our jupyter environment ourselves in order to validate your results. Feel free to ask us
+if you need us to install the library on the hadoop cluster. 
 
 
