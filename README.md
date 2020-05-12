@@ -449,4 +449,14 @@ as `number of successes/(number of successes + number of failures)` by repeating
 so that we don't have to configure our jupyter environment ourselves in order to validate your results. Feel free to ask us
 if you need us to install the library on the hadoop cluster. 
 
+##### 9 - Q: Any preferences for computing geo distances?
+* **A**: Any method with a few meters accuracy, is acceptable - the most accurate is the `vincenty` method, but `harversine` is perfectly
+fine, or you can use an existing method from one of the provided libraries. We have installed `geopy`, `networkx`, `scikit-learn`,
+`bokeh` and `matplotlib` for your convenience.
 
+##### 10 - Q: Can we solve it as shortest path algorithm?
+* **A**: Yes, or more precisely as a constrained shortest path algorithm. It is a robust optimization problem. The constraints
+are that you must arrive before a time limit with a minimum confidence level,
+and it must be a valid route on the the public transport infrastructure and schedule. The objective is to maximize the time of
+derpature, so that you spend the least time between the departing stop and the arrival stop, and any algorithm that achieves
+this objective is fine. As a starting point, we present you with a list of algorithms you may want to consider: https://transport.okfn.org/index-60.html.
