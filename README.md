@@ -46,7 +46,7 @@ Probably not. However, most public transport applications will insist on the fir
 
 In this final project you will build your own _robust_ public transport route planner to improve on that. You will reuse the SBB dataset (See next section: [Dataset Description](#dataset-description)).
 
-Given a desired departure, or arrival time, your route planner will compute the fastest route between two stops within a provided uncertainty tolerance expressed as interquartiles.
+Given a desired arrival time, your route planner will compute the fastest route between two stops within a provided uncertainty tolerance expressed as interquartiles.
 For instance, "what route from A to B is the fastest at least Q% of the time if I want to leave from A (resp. arrive at B) at instant T". Note that *uncertainty* is a measure of a route not being feasible within the time computed by the algorithm.
 
 In order to answer this question you will need to:
@@ -175,17 +175,34 @@ In some cases, the actual times were not measured so the `AN_PROGNOSE_STATUS`/`A
 
 #### Time table data
 
-We have copied the  [timetable](https://opentransportdata.swiss/en/cookbook/hafas-rohdaten-format-hrdf/#Abgrenzung) to HDFS.
-
-We are in the process of converting the files in an easy to query table form, and will keep you updated when the tables are available.
-
-You will find there the timetables for the years [2018](https://opentransportdata.swiss/en/dataset/timetable-2018-gtfs)-[2019](https://opentransportdata.swiss/en/dataset/timetable-2019-gtfs).
-The timetables are updated weekly. It is ok to assume that the weekly changes are small, and a timetable for
-a given week is thus the same for the full year - you can for instance use the schedule of May 13-17, 2019, which was
-a typical week for the year.
+We have copied the  [timetable](https://opentransportdata.swiss/en/cookbook/hafas-rohdaten-format-hrdf/#Abgrenzung) to HDFS, under
+`/data/sbb/timetables/csv/`.
 
 Only GTFS format has been copied on HDFS, the full description of which is available in the opentransportdata.swiss data [timetable cookbooks](https://opentransportdata.swiss/en/cookbook/gtfs/).
 The more courageous who want to give a try at the [HDFS](https://opentransportdata.swiss/en/cookbook/hafas-rohdaten-format-hrdf/) format must contact us.
+
+You will find there the timetables for the years [2018](https://opentransportdata.swiss/en/dataset/timetable-2018-gtfs)-[2019](https://opentransportdata.swiss/en/dataset/timetable-2019-gtfs) in GTFS format.
+The timetables are updated weekly. It is however, ok to assume that the weekly changes are small, and a timetable for
+a given week is thus the same for the full year - you can for instance use the schedule of May 13-17, 2019, which was
+a typical week for the year.
+
+In addition, we have also converted the files corresponding to the week of May 14th 2019 to the ORC format.
+You can find them under `/data/sbb/timetables/orc`.
+This format is easily read in Spark as illustrated in the following example. Replace `stop_times` with the appropriate name
+in order to read the other tables.
+
+```
+spark.read.orc("hdfs:///data/sbb/timetables/orc/stop_times").registerTempTable("stop_times_df")
+sqlContext.sql("select * from stop_times_df limit 10)").show(10)
+```
+
+Alternatively, `sqlContext` provides a full hive context in Spark, and it supports most of Hive _DDL_, _DML_ (but don't), and _Data Retrieval_ queries.
+For your convenience, we include with each data type below, the _DDL_ query that was used to create the external tables in Hive.
+
+**Note**: if you use the HiveContext in Spark, it will use by default a local metadata store, which means that you will
+need to create your database and tables from scratch using the usual _DDL_ commands. You can configure your sparkmagic session
+to connect to an existing metadata store, but unless you want to access pre-existing views managed by Hive,
+you will most probably not need to do that. 
 
 We provide a summary description of the files below. The most relevant files are marked by (+):
 
@@ -209,7 +226,6 @@ We provide a summary description of the files below. The most relevant files are
         LOCATION_TYPE  string,
         PARENT_STATION string
     )
-    row format delimited fields terminated by ';'
     stored as orc
     location '/data/sbb/timetables/orc/stops'
     tblproperties ('orc.compress'='SNAPPY','immutable'='true');
@@ -237,7 +253,6 @@ We provide a summary description of the files below. The most relevant files are
         PICKUP_TYPE    tinyint,
         DROP_OFF_TYPE  tinyint
     )
-    row format delimited fields terminated by ';'
     stored as orc
     location '/data/sbb/timetables/orc/stop_times'
     tblproperties ('orc.compress'='SNAPPY','immutable'='true');
@@ -263,7 +278,6 @@ We provide a summary description of the files below. The most relevant files are
         TRIP_SHORT_NAME string,
         DIRECTION_ID    tinyint
     )
-    row format delimited fields terminated by ';'
     stored as orc
     location '/data/sbb/timetables/orc/trips'
     tblproperties ('orc.compress'='SNAPPY','immutable'='true');
@@ -289,7 +303,6 @@ We provide a summary description of the files below. The most relevant files are
         SATURDAY   boolean,
         SUNDAY     boolean
     )
-    row format delimited fields terminated by ';'
     stored as orc
     location '/data/sbb/timetables/orc/calendar'
     tblproperties ('orc.compress'='SNAPPY','immutable'='true');
@@ -315,7 +328,6 @@ We provide a summary description of the files below. The most relevant files are
         ROUTE_DESC       string,
         ROUTE_TYPE       smallint
     )
-    row format delimited fields terminated by ';'
     stored as orc
     location '/data/sbb/timetables/orc/routes'
     tblproperties ('orc.compress'='SNAPPY','immutable'='true');
