@@ -9,4 +9,3 @@ scikit-learn
 statsmodels
 folium
 pycausalimpact
-ipywidgets
